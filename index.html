@@ -1402,6 +1402,12 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
           <div class="example-data" v-else>{{ activeMethod.example.data }}</div>
           <div class="example-step" v-for="(es, ei) in activeMethod.example.steps" :key="ei">
             <div class="ex-step-title">{{ es.step }}</div>
+            <div v-if="es.matrix" style="margin:6px 0;display:flex;justify-content:center;">
+              <table style="border-collapse:collapse;font-size:13px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+                <thead><tr><th v-for="mh in es.matrix.headers" :key="mh" style="padding:5px 14px;background:var(--bg-soft);border:1px solid var(--border);text-align:center;font-weight:700;color:var(--primary);">{{ mh }}</th></tr></thead>
+                <tbody><tr v-for="(mrow, mi) in es.matrix.rows" :key="mi"><td v-for="(mcell, mc) in mrow" :key="mc" style="padding:5px 14px;border:1px solid var(--border);text-align:center;font-variant-numeric:tabular-nums;">{{ mcell }}</td></tr></tbody>
+              </table>
+            </div>
             <div v-if="es.calc" class="ex-calc">{{ es.calc }}</div>
             <div v-if="es.result" class="ex-result">→ {{ es.result }}</div>
           </div>
@@ -1692,7 +1698,7 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
               data: { headers: ['', '价格(↓)', '拍照(↑)', '续航(↑)', '权重', '0.6', '0.3', '0.1'], rows: [['手机A', '1', '2', '6'], ['手机B', '1/2', '1', '5'], ['手机C', '1/6', '1/5', '1']] },
               steps: [
                 { step: 'Step 1: 建立层次结构模型', calc: '目标→准则层→方案层', result: '' },
-                { step: 'Step 2: 构造两两比较判断矩阵', calc: 'A = [[1,2,6],[1/2,1,5],[1/6,1/5,1]]', result: '满足互反性' },
+                { step: 'Step 2: 构造两两比较判断矩阵', matrix: { headers: ['', '价格', '拍照', '续航'], rows: [['价格', '1', '2', '6'], ['拍照', '1/2', '1', '5'], ['续航', '1/6', '1/5', '1']] }, result: '满足互反性 aᵢ=1/aⱼᵢ' },
                 { step: 'Step 3: 计算权重向量', calc: '|A-λI|=0 → λmax=3.053', result: 'w=[0.588, 0.323, 0.089]ᵀ' },
                 { step: 'Step 4: 一致性检验（CR<0.1）', calc: 'CI=0.027, RI=0.52, CR=0.046', result: 'CR=0.046 < 0.1 ✓' },
                 { step: 'Step 5: 层次总排序', calc: 'A:0.588, B:0.323, C:0.089', result: '排序：A > B > C' }
