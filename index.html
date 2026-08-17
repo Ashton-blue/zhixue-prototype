@@ -472,11 +472,11 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         <button v-for="f in portfolioFilters" :key="f" class="filter-chip" :class="{ active: portfolioFilter === f }" @click="portfolioFilter = f">{{ f }}</button>
       </div>
       <div class="grid-3" v-if="filteredPortfolio.length">
-        <div class="card work-item" v-for="w in filteredPortfolio" :key="w.name" :class="{ 'work-highlight': w.highlight }" @click="showWorkDetail(w)">
+        <div class="card work-item" v-for="w in filteredPortfolio" :key="w.name" :class="{ 'work-highlight': w.highlight }" :style="w.publishStatus === 'in-progress' ? { opacity: 0.5, cursor: 'not-allowed' } : {}" @click="w.publishStatus === 'in-progress' ? null : showWorkDetail(w)">
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
             <div class="work-icon" :style="{ background: w.color }"><i :class="w.icon"></i></div>
             <div style="flex:1;min-width:0;">
-              <h4 style="font-size:15px;font-weight:700;">{{ w.name }} <span class="ver-tag">v1.0</span></h4>
+              <h4 style="font-size:15px;font-weight:700;">{{ w.name }} <span class="ver-tag">v1.0</span><span v-if="w.publishStatus === 'in-progress'" style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;margin-left:6px;">制作中</span></h4>
               <p style="font-size:13px;color:var(--text-sub);margin-top:2px;">{{ w.desc }}</p>
             </div>
           </div>
@@ -498,9 +498,9 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         <button v-for="f in noteFilters" :key="f.value" class="filter-chip" :class="{ active: noteFilter === f.value }" @click="noteFilter = f.value">{{ f.label }}</button>
       </div>
       <div v-if="filteredNotes.length">
-        <div class="card note-item" v-for="n in filteredNotes" :key="n.id" @click="toggleNote(n.id)">
+        <div class="card note-item" v-for="n in filteredNotes" :key="n.id" @click="n.publishStatus === 'in-progress' ? null : toggleNote(n.id)" :style="n.publishStatus === 'in-progress' ? { opacity: 0.5, cursor: 'not-allowed' } : {}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h4 style="font-size:15px;font-weight:700;">{{ n.title }}</h4>
+            <h4 style="font-size:15px;font-weight:700;">{{ n.title }}<span v-if="n.publishStatus === 'in-progress'" style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;margin-left:6px;">制作中</span></h4>
             <span :class="['tag', 'cat-' + n.category]">{{ n.category }}</span>
           </div>
           <div class="note-source-row">
@@ -540,10 +540,10 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         <button v-for="c in methodCategories" :key="c" class="filter-chip" :class="{ active: methodFilter === c }" @click="methodFilter = c">{{ c }}</button>
       </div>
       <div class="grid-3" v-if="filteredMethods.length">
-        <div class="card method-card" v-for="m in filteredMethods" :key="m.code" @click="showMethodDetail(m)">
+        <div class="card method-card" :class="{'method-in-progress': m.status === 'in-progress'}" v-for="m in filteredMethods" :key="m.code" @click="m.status === 'in-progress' ? null : showMethodDetail(m)" :style="m.status === 'in-progress' ? { opacity: 0.5, cursor: 'not-allowed' } : {}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div class="method-icon" :style="{ background: getCategoryColor(m.cat) }"><i :class="m.icon"></i></div>
-            <span style="display:flex;align-items:center;gap:5px;"><span class="ver-tag">{{ m.version || 'v1.0' }}</span><span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;" :style="{ color: getCategoryColor(m.cat), background: getCategoryColor(m.cat) + '18', border: '1px solid ' + getCategoryColor(m.cat) + '44' }">{{ m.cat }}</span></span>
+            <span style="display:flex;align-items:center;gap:5px;"><span class="ver-tag">{{ m.version || 'v1.0' }}</span><span v-if="m.status === 'in-progress'" style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;">制作中</span><span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;" :style="{ color: getCategoryColor(m.cat), background: getCategoryColor(m.cat) + '18', border: '1px solid ' + getCategoryColor(m.cat) + '44' }">{{ m.cat }}</span></span>
           </div>
           <h4 style="font-size:15px;font-weight:700;">{{ m.name }}</h4>
           <p style="font-size:13px;color:var(--text-sub);margin-top:4px;">{{ m.desc }}</p>
@@ -827,15 +827,24 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
             </div>
           </div>
           <table class="cms-table" v-if="editingNoteId === null">
-            <thead><tr><th>标题</th><th>分类</th><th>状态</th><th>日期</th><th>操作</th></tr></thead>
+            <thead><tr><th>标题</th><th>分类</th><th>状态</th><th>日期</th><th>发布</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="n in notes" :key="n.id">
                 <td style="font-weight:600;">{{ n.title }}</td>
                 <td><span :class="['tag', 'cat-' + n.category]" style="font-size:11px;padding:2px 8px;">{{ n.category }}</span></td>
                 <td>{{ n.status }}</td>
                 <td>{{ n.date }}</td>
+                <td>
+                  <span v-if="n.publishStatus === 'closed'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#9CA3AF;background:#9CA3AF18;border:1px solid #9CA3AF44;">已关闭</span>
+                  <span v-else-if="n.publishStatus === 'in-progress'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;">制作中</span>
+                  <span v-else style="font-size:12px;padding:2px 8px;border-radius:10px;color:#10B981;background:#10B98118;border:1px solid #10B98144;">已上线</span>
+                </td>
                 <td class="cms-actions">
                   <button class="cms-btn-edit" @click="startEditNote(n)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                  <button v-if="n.publishStatus !== 'closed'" class="cms-btn-del" @click="closeNote(n.id)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-eye-slash"></i> 关闭</button>
+                  <button v-else class="cms-btn-edit" @click="activateNote(n.id)" style="margin-right:4px;"><i class="fa-solid fa-eye"></i> 启用</button>
+                  <button v-if="n.publishStatus === 'active'" class="cms-btn-edit" @click="setNoteInProgress(n.id)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-hourglass-half"></i> 制作中</button>
+                  <button v-else-if="n.publishStatus === 'in-progress'" class="cms-btn-edit" @click="activateNote(n.id)" style="margin-right:4px;"><i class="fa-solid fa-rocket"></i> 上线</button>
                   <button class="cms-btn-del" @click="deleteNote(n.id)"><i class="fa-solid fa-trash"></i> 删除</button>
                 </td>
               </tr>
@@ -863,15 +872,24 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
             </div>
           </div>
           <table class="cms-table" v-if="editingMethodCode === null">
-            <thead><tr><th>代码</th><th>名称</th><th>分类</th><th>案例数</th><th>操作</th></tr></thead>
+            <thead><tr><th>代码</th><th>名称</th><th>分类</th><th>案例数</th><th>状态</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="m in methods" :key="m.code">
                 <td style="font-family:monospace;font-weight:600;">{{ m.code }}</td>
                 <td style="font-weight:600;">{{ m.name }}</td>
                 <td><span style="font-size:12px;padding:2px 8px;border-radius:10px;" :style="{ color: getCategoryColor(m.cat), background: getCategoryColor(m.cat) + '18' }">{{ m.cat }}</span></td>
                 <td>{{ m.casesCount }}</td>
+                <td>
+                  <span v-if="m.status === 'closed'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#9CA3AF;background:#9CA3AF18;border:1px solid #9CA3AF44;">已关闭</span>
+                  <span v-else-if="m.status === 'in-progress'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;">制作中</span>
+                  <span v-else style="font-size:12px;padding:2px 8px;border-radius:10px;color:#10B981;background:#10B98118;border:1px solid #10B98144;">已上线</span>
+                </td>
                 <td class="cms-actions">
                   <button class="cms-btn-edit" @click="startEditMethod(m)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                  <button v-if="m.status !== 'closed'" class="cms-btn-del" @click="closeMethod(m.code)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-eye-slash"></i> 关闭</button>
+                  <button v-else class="cms-btn-edit" @click="activateMethod(m.code)" style="margin-right:4px;"><i class="fa-solid fa-eye"></i> 启用</button>
+                  <button v-if="m.status === 'active'" class="cms-btn-edit" @click="setMethodInProgress(m.code)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-hourglass-half"></i> 制作中</button>
+                  <button v-else-if="m.status === 'in-progress'" class="cms-btn-edit" @click="activateMethod(m.code)" style="margin-right:4px;"><i class="fa-solid fa-rocket"></i> 上线</button>
                   <button class="cms-btn-del" @click="deleteMethod(m.code)"><i class="fa-solid fa-trash"></i> 删除</button>
                 </td>
               </tr>
@@ -901,15 +919,24 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
             </div>
           </div>
           <table class="cms-table" v-if="editingWorkIdx === null">
-            <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>日期</th><th>操作</th></tr></thead>
+            <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>日期</th><th>发布</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="(w, wi) in portfolio" :key="w.name">
                 <td style="font-weight:600;">{{ w.name }}</td>
                 <td>{{ w.type }}</td>
                 <td>{{ w.status }}</td>
                 <td>{{ w.date }}</td>
+                <td>
+                  <span v-if="w.publishStatus === 'closed'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#9CA3AF;background:#9CA3AF18;border:1px solid #9CA3AF44;">已关闭</span>
+                  <span v-else-if="w.publishStatus === 'in-progress'" style="font-size:12px;padding:2px 8px;border-radius:10px;color:#F59E0B;background:#F59E0B18;border:1px solid #F59E0B44;">制作中</span>
+                  <span v-else style="font-size:12px;padding:2px 8px;border-radius:10px;color:#10B981;background:#10B98118;border:1px solid #10B98144;">已上线</span>
+                </td>
                 <td class="cms-actions">
                   <button class="cms-btn-edit" @click="startEditWork(wi)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                  <button v-if="w.publishStatus !== 'closed'" class="cms-btn-del" @click="closeWork(wi)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-eye-slash"></i> 关闭</button>
+                  <button v-else class="cms-btn-edit" @click="activateWork(wi)" style="margin-right:4px;"><i class="fa-solid fa-eye"></i> 启用</button>
+                  <button v-if="w.publishStatus === 'active'" class="cms-btn-edit" @click="setWorkInProgress(wi)" style="color:#F59E0B;border-color:#F59E0B;margin-right:4px;"><i class="fa-solid fa-hourglass-half"></i> 制作中</button>
+                  <button v-else-if="w.publishStatus === 'in-progress'" class="cms-btn-edit" @click="activateWork(wi)" style="margin-right:4px;"><i class="fa-solid fa-rocket"></i> 上线</button>
                   <button class="cms-btn-del" @click="deleteWork(wi)"><i class="fa-solid fa-trash"></i> 删除</button>
                 </td>
               </tr>
@@ -1548,15 +1575,16 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         ],
         interests: ['多准则决策', 'AI学习系统', '知识图谱', '教育技术', '学术写作', 'MCDM应用'],
         portfolio: [
-          { name: '学习知识图谱', version: 'v1.0', desc: '笔记与笔记之间的关联网络可视化，支持探索式导航。', icon: 'fa-solid fa-diagram-project', color: '#1565C0', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: true, action: 'showKnowledgeGraph' },
-          { name: '方法关系图谱', version: 'v1.0', desc: '12种MCDM方法之间的演进、组合、互补关系可视化。', icon: 'fa-solid fa-project-diagram', color: '#2E7D32', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: false, action: 'showMethodGraph' },
-          { name: '研究项目看板', version: 'v1.0', desc: '科研项目管理看板，支持任务追踪、进度可视化与团队协作。', icon: 'fa-solid fa-tasks', color: '#2E7D32', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: false, action: 'showProjectBoard' },
-          { name: 'MCDM在线计算器', version: 'v1.0', desc: '多准则决策在线计算工具集，支持AHP、TOPSIS等方法的一站式计算与结果可视化。', icon: 'fa-solid fa-calculator', color: '#7C3AED', status: '小工具', date: '2026-08', type: '小工具', url: '#', highlight: false, action: 'showMcdmCalc' },
-          { name: '决策方法对比表', version: 'v1.0', desc: '多准则决策方法对比可视化工具。', icon: 'fa-solid fa-table', color: '#DC2626', status: '小工具', date: '2026-08', type: '小工具', url: '#', highlight: false, action: 'showMethodCompare' },
-          { name: '教学框架设计', version: 'v1.0', desc: '研究方法论教学框架：道术用观查源。', icon: 'fa-solid fa-brain', color: '#2563EB', status: '方法论', date: '2026-08', type: '方法论', url: '#', highlight: false, action: 'showTeachFramework' },
-          { name: '学习方法论', version: 'v1.0', desc: 'To learn how to learn — 个人学习系统设计。', icon: 'fa-solid fa-book-open', color: '#0891B2', status: '方法论', date: '2026-08', type: '方法论', url: '#', highlight: false, action: 'showLearnMethod' },
-          { name: '供应商选择案例', version: 'v1.0', desc: '基于AHP-TOPSIS的供应商多准则评估研究。', icon: 'fa-solid fa-folder-open', color: '#92400E', status: '案例', date: '2026-08', type: '案例', url: '#', highlight: false, action: 'showSupplierCase' },
-          { name: 'AI学习助手', version: 'v1.0', desc: '悬浮式AI对话助手，边看边问，支持快捷提问与多模块知识问答。', icon: 'fa-solid fa-robot', color: '#C62828', status: 'AI助手', date: '2026-08', type: 'AI助手', url: '#', highlight: false, action: 'openAiChat' }
+          { name: '学习知识图谱', version: 'v1.0', desc: '笔记与笔记之间的关联网络可视化，支持探索式导航。', icon: 'fa-solid fa-diagram-project', color: '#1565C0', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: true, action: 'showKnowledgeGraph', publishStatus: 'active' },
+          { name: '方法关系图谱', version: 'v1.0', desc: '12种MCDM方法之间的演进、组合、互补关系可视化。', icon: 'fa-solid fa-project-diagram', color: '#2E7D32', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: false, action: 'showMethodGraph', publishStatus: 'active' },
+          { name: '研究项目看板', version: 'v1.0', desc: '科研项目管理看板，支持任务追踪、进度可视化与团队协作。', icon: 'fa-solid fa-tasks', color: '#2E7D32', status: '原型', date: '2026-08', type: '原型', url: '#', highlight: false, action: 'showProjectBoard', publishStatus: 'active' },
+          { name: 'MCDM在线计算器', version: 'v1.0', desc: '多准则决策在线计算工具集，支持AHP、TOPSIS等方法的一站式计算与结果可视化。', icon: 'fa-solid fa-calculator', color: '#7C3AED', status: '小工具', date: '2026-08', type: '小工具', url: '#', highlight: false, action: 'showMcdmCalc', publishStatus: 'active' },
+          { name: '决策方法对比表', version: 'v1.0', desc: '多准则决策方法对比可视化工具。', icon: 'fa-solid fa-table', color: '#DC2626', status: '小工具', date: '2026-08', type: '小工具', url: '#', highlight: false, action: 'showMethodCompare', publishStatus: 'active' },
+          { name: '教学框架设计', version: 'v1.0', desc: '研究方法论教学框架：道术用观查源。', icon: 'fa-solid fa-brain', color: '#2563EB', status: '方法论', date: '2026-08', type: '方法论', url: '#', highlight: false, action: 'showTeachFramework', publishStatus: 'active' },
+          { name: '学习方法论', version: 'v1.0', desc: 'To learn how to learn — 个人学习系统设计。', icon: 'fa-solid fa-book-open', color: '#0891B2', status: '方法论', date: '2026-08', type: '方法论', url: '#', highlight: false, action: 'showLearnMethod', publishStatus: 'active' },
+          { name: '供应商选择案例', version: 'v1.0', desc: '基于AHP-TOPSIS的供应商多准则评估研究。', icon: 'fa-solid fa-folder-open', color: '#92400E', status: '案例', date: '2026-08', type: '案例', url: '#', highlight: false, action: 'showSupplierCase', publishStatus: 'active' },
+          { name: 'AI学习助手', version: 'v1.0', desc: '悬浮式AI对话助手，边看边问，支持快捷提问与多模块知识问答。', icon: 'fa-solid fa-robot', color: '#C62828', status: 'AI助手', date: '2026-08', type: 'AI助手', url: '#', highlight: false, action: 'openAiChat', publishStatus: 'active' },
+          { name: '网站行为数据分析', version: 'v1.0', desc: '基于localStorage的使用行为数据追踪，记录访客交互热度、Tab偏好、地区分布与设备信息，为内容运营提供数据支撑。', icon: 'fa-solid fa-chart-bar', color: '#C62828', status: '小工具', date: '2026-08', type: '小工具', url: '#', highlight: false, action: 'showBehaviorDashboard', publishStatus: 'active' }
         ],
         portfolioFilter: '全部',
         portfolioFilters: ['全部', '原型', '小工具', '方法论', '案例', 'AI助手'],
@@ -1587,12 +1615,12 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         ],
         expandedNote: null,
         notes: [
-          { id: 1, title: '系统1和系统2：我们怎么做决策', category: '思维方法', source: '《思考，快与慢》', sourceIcon: 'fa-book', origin: 'self', aiTags: ['认知偏差', '双系统理论', '决策心理'], status: '已读', date: '2026-08', duration: '5h', summary: '卡尼曼揭示人的思维有两套系统：快速直觉的系统1和缓慢理性的系统2，大多数决策其实由系统1主导。', question: '人在做决策时，到底是靠直觉还是理性？', findings: ['系统1快速自动但容易出错', '系统2理性但懒惰，经常偷懒让系统1代劳', '决策者声称的偏好未必是真实偏好'], thoughts: '对MCDM的启示：需要结构化方法来帮助系统2介入决策过程，而不是依赖直觉判断。' },
-          { id: 2, title: '结构化表达：从混乱到清晰', category: '思维方法', source: '《金字塔原理》', sourceIcon: 'fa-book', origin: 'self', aiTags: ['结构化思维', '逻辑表达', '知识组织'], status: '已读', date: '2026-08', duration: '4h', summary: '芭芭拉·明托的结构化表达方法：结论先行、以上统下、归类分组、逻辑递进。', question: '如何把散乱的想法组织成有层次的结构？', findings: ['结论先行比铺陈论证更有说服力', '归类分组本质是MECE原则的体现', '结构不只是表达技巧，更是思维框架'], thoughts: '跟知识图谱的思路不谋而合——把知识点组织成层次结构，才能内化为自己的思维模型。' },
-          { id: 3, title: '批判性阅读论文的思维框架', category: '思维方法', source: '《学会提问》', sourceIcon: 'fa-book', origin: 'ai', aiTags: ['批判性思维', '论文阅读', '提问框架'], status: '已读', date: '2026-08', duration: '3h', summary: '尼尔·布朗的批判性思维方法：不是被动接受信息，而是主动对信息提问。', question: '读论文时如何判断论证质量？', findings: ['先问：论题是什么？结论是什么？理由是什么？', '警惕：含义模糊的词汇、被省略的信息、数据欺骗', '替代原因思维：同一结果可能有不同解释'], thoughts: '这套提问框架对读论文特别有用，每篇论文都可以用这个清单过一遍。' },
-          { id: 4, title: '从感知机到深度学习的学习路线', category: '技术学习', source: '《机器学习》周志华', sourceIcon: 'fa-book', origin: 'self', aiTags: ['深度学习', '模型演进', '偏差方差'], status: '在读', date: '2026-08', duration: '8h', summary: '西瓜书的核心脉络：从感知机出发，通过增加层数、引入核技巧、集成学习，不断提升表达能力。', question: '不同机器学习方法之间的内在联系是什么？', findings: ['模型演进的核心线索是表达能力的提升', '过拟合与正则化是贯穿始终的关键矛盾', '偏差-方差权衡决定了模型选择'], thoughts: '对非CS背景的人来说，理解"为什么这样做"比"怎么算"更重要。下一步想深入集成学习部分。' },
-          { id: 5, title: 'AHP判断矩阵的数学本质', category: '管理决策', source: 'AHP一致性检验改进研究(2024)', sourceIcon: 'fa-file-lines', origin: 'ai', aiTags: ['AHP', '判断矩阵', '一致性检验', '线性代数'], status: '已读', date: '2026-08', duration: '3h', summary: 'AHP的核心是判断矩阵的特征向量法，一致性检验CR<0.1保证判断逻辑合理。', question: 'AHP的数学本质到底是什么？', findings: ['判断矩阵就是两两比较的定量化表达', '特征向量法本质是求权重的一致逼近', 'CR超标时需要重新审视判断逻辑'], thoughts: '真正难的不在计算，在于如何合理拆解层次结构、如何选择专家打分。论文提出的改进方法有参考价值。' },
-          { id: 6, title: 'AI时代学习重心的转移', category: '思维方法', source: '3Blue1Brown 视频系列', sourceIcon: 'fa-link', origin: 'ai', aiTags: ['AI教育', '学习变革', '批判思维'], status: '在读', date: '2026-08', duration: '2h', summary: '当AI能完成信息检索和内容生成时，"提出问题"和"判断质量"的价值在上升。', question: 'AI时代我们应该学什么？', findings: ['"记住知识"的价值在快速下降', '"提出问题"比"回答问题"更重要', '学习重心从what转向why和how to evaluate'], thoughts: '这就是我做智学的初衷：不是展示我学到了什么，而是展示我是怎么学习的。视频讲解的可视化思路值得借鉴。' }
+          { id: 1, title: '系统1和系统2：我们怎么做决策', category: '思维方法', source: '《思考，快与慢》', sourceIcon: 'fa-book', origin: 'self', aiTags: ['认知偏差', '双系统理论', '决策心理'], status: '已读', date: '2026-08', duration: '5h', summary: '卡尼曼揭示人的思维有两套系统：快速直觉的系统1和缓慢理性的系统2，大多数决策其实由系统1主导。', question: '人在做决策时，到底是靠直觉还是理性？', findings: ['系统1快速自动但容易出错', '系统2理性但懒惰，经常偷懒让系统1代劳', '决策者声称的偏好未必是真实偏好'], thoughts: '对MCDM的启示：需要结构化方法来帮助系统2介入决策过程，而不是依赖直觉判断。', publishStatus: 'active' },
+          { id: 2, title: '结构化表达：从混乱到清晰', category: '思维方法', source: '《金字塔原理》', sourceIcon: 'fa-book', origin: 'self', aiTags: ['结构化思维', '逻辑表达', '知识组织'], status: '已读', date: '2026-08', duration: '4h', summary: '芭芭拉·明托的结构化表达方法：结论先行、以上统下、归类分组、逻辑递进。', question: '如何把散乱的想法组织成有层次的结构？', findings: ['结论先行比铺陈论证更有说服力', '归类分组本质是MECE原则的体现', '结构不只是表达技巧，更是思维框架'], thoughts: '跟知识图谱的思路不谋而合——把知识点组织成层次结构，才能内化为自己的思维模型。', publishStatus: 'active' },
+          { id: 3, title: '批判性阅读论文的思维框架', category: '思维方法', source: '《学会提问》', sourceIcon: 'fa-book', origin: 'ai', aiTags: ['批判性思维', '论文阅读', '提问框架'], status: '已读', date: '2026-08', duration: '3h', summary: '尼尔·布朗的批判性思维方法：不是被动接受信息，而是主动对信息提问。', question: '读论文时如何判断论证质量？', findings: ['先问：论题是什么？结论是什么？理由是什么？', '警惕：含义模糊的词汇、被省略的信息、数据欺骗', '替代原因思维：同一结果可能有不同解释'], thoughts: '这套提问框架对读论文特别有用，每篇论文都可以用这个清单过一遍。', publishStatus: 'active' },
+          { id: 4, title: '从感知机到深度学习的学习路线', category: '技术学习', source: '《机器学习》周志华', sourceIcon: 'fa-book', origin: 'self', aiTags: ['深度学习', '模型演进', '偏差方差'], status: '在读', date: '2026-08', duration: '8h', summary: '西瓜书的核心脉络：从感知机出发，通过增加层数、引入核技巧、集成学习，不断提升表达能力。', question: '不同机器学习方法之间的内在联系是什么？', findings: ['模型演进的核心线索是表达能力的提升', '过拟合与正则化是贯穿始终的关键矛盾', '偏差-方差权衡决定了模型选择'], thoughts: '对非CS背景的人来说，理解"为什么这样做"比"怎么算"更重要。下一步想深入集成学习部分。', publishStatus: 'active' },
+          { id: 5, title: 'AHP判断矩阵的数学本质', category: '管理决策', source: 'AHP一致性检验改进研究(2024)', sourceIcon: 'fa-file-lines', origin: 'ai', aiTags: ['AHP', '判断矩阵', '一致性检验', '线性代数'], status: '已读', date: '2026-08', duration: '3h', summary: 'AHP的核心是判断矩阵的特征向量法，一致性检验CR<0.1保证判断逻辑合理。', question: 'AHP的数学本质到底是什么？', findings: ['判断矩阵就是两两比较的定量化表达', '特征向量法本质是求权重的一致逼近', 'CR超标时需要重新审视判断逻辑'], thoughts: '真正难的不在计算，在于如何合理拆解层次结构、如何选择专家打分。论文提出的改进方法有参考价值。', publishStatus: 'active' },
+          { id: 6, title: 'AI时代学习重心的转移', category: '思维方法', source: '3Blue1Brown 视频系列', sourceIcon: 'fa-link', origin: 'ai', aiTags: ['AI教育', '学习变革', '批判思维'], status: '在读', date: '2026-08', duration: '2h', summary: '当AI能完成信息检索和内容生成时，"提出问题"和"判断质量"的价值在上升。', question: 'AI时代我们应该学什么？', findings: ['"记住知识"的价值在快速下降', '"提出问题"比"回答问题"更重要', '学习重心从what转向why和how to evaluate'], thoughts: '这就是我做智学的初衷：不是展示我学到了什么，而是展示我是怎么学习的。视频讲解的可视化思路值得借鉴。', publishStatus: 'active' }
         ],
         methodFilter: '全部',
         methodCategories: ['权重确定类', '排序选择类', '结构分析类', '模糊处理类', '混合应用类'],
@@ -1666,18 +1694,18 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
           grey: ['灰色关联分析', '灰色关联+熵权法+TOPSIS']
         },
         methods: [
-          { code: 'ahp', version: 'v1.0', name: 'AHP层次分析', desc: '通过两两比较建立判断矩阵，确定各准则权重。', icon: 'fa-solid fa-sitemap', cat: '权重确定类', casesCount: 3 },
-          { code: 'topsis', version: 'v1.0', name: 'TOPSIS', desc: '基于正负理想解的距离进行方案排序。', icon: 'fa-solid fa-balance-scale', cat: '排序选择类', casesCount: 3 },
-          { code: 'dematel', version: 'v1.0', name: 'DEMATEL', desc: '分析因素间因果关系与影响程度。', icon: 'fa-solid fa-project-diagram', cat: '结构分析类', casesCount: 2 },
-          { code: 'vikor', version: 'v1.0', name: 'VIKOR', desc: '多目标加权妥协排序方法。', icon: 'fa-solid fa-sliders-h', cat: '排序选择类', casesCount: 2 },
-          { code: 'promethee', version: 'v1.0', name: 'PROMETHEE', desc: '基于偏好函数进行方案偏好排序。', icon: 'fa-solid fa-sort-amount-down', cat: '排序选择类', casesCount: 2 },
-          { code: 'electre', version: 'v1.0', name: 'ELECTRE', desc: '基于 outranking 关系逐级筛选方案。', icon: 'fa-solid fa-filter', cat: '排序选择类', casesCount: 1 },
-          { code: 'fuzzy', version: 'v1.0', name: '模糊综合评价', desc: '处理不确定性和模糊信息的综合评价。', icon: 'fa-solid fa-cloud', cat: '模糊处理类', casesCount: 2 },
-          { code: 'anp', version: 'v1.0', name: 'ANP网络分析', desc: '处理准则间依赖与反馈的网络分析法。', icon: 'fa-solid fa-network-wired', cat: '权重确定类', casesCount: 1 },
-          { code: 'entropy', version: 'v1.0', name: '熵权法', desc: '基于信息熵的客观赋权方法。', icon: 'fa-solid fa-percentage', cat: '权重确定类', casesCount: 2 },
-          { code: 'copras', version: 'v1.0', name: 'COPRAS', desc: '区分效益与成本准则的比例评估。', icon: 'fa-solid fa-chart-pie', cat: '排序选择类', casesCount: 1 },
-          { code: 'waspas', version: 'v1.0', name: 'WASPAS', desc: '综合加权和与加权乘积的排序方法。', icon: 'fa-solid fa-calculator', cat: '排序选择类', casesCount: 1 },
-          { code: 'grey', version: 'v1.0', name: '灰色关联分析', desc: '基于曲线几何相似性评价关联程度。', icon: 'fa-solid fa-wave-square', cat: '模糊处理类', casesCount: 1 }
+          { code: 'ahp', version: 'v1.0', name: 'AHP层次分析', desc: '通过两两比较建立判断矩阵，确定各准则权重。', icon: 'fa-solid fa-sitemap', cat: '权重确定类', casesCount: 3, status: 'active' },
+          { code: 'topsis', version: 'v1.0', name: 'TOPSIS', desc: '基于正负理想解的距离进行方案排序。', icon: 'fa-solid fa-balance-scale', cat: '排序选择类', casesCount: 3, status: 'active' },
+          { code: 'dematel', version: 'v1.0', name: 'DEMATEL', desc: '分析因素间因果关系与影响程度。', icon: 'fa-solid fa-project-diagram', cat: '结构分析类', casesCount: 2, status: 'active' },
+          { code: 'vikor', version: 'v1.0', name: 'VIKOR', desc: '多目标加权妥协排序方法。', icon: 'fa-solid fa-sliders-h', cat: '排序选择类', casesCount: 2, status: 'active' },
+          { code: 'promethee', version: 'v1.0', name: 'PROMETHEE', desc: '基于偏好函数进行方案偏好排序。', icon: 'fa-solid fa-sort-amount-down', cat: '排序选择类', casesCount: 2, status: 'active' },
+          { code: 'electre', version: 'v1.0', name: 'ELECTRE', desc: '基于 outranking 关系逐级筛选方案。', icon: 'fa-solid fa-filter', cat: '排序选择类', casesCount: 1, status: 'active' },
+          { code: 'fuzzy', version: 'v1.0', name: '模糊综合评价', desc: '处理不确定性和模糊信息的综合评价。', icon: 'fa-solid fa-cloud', cat: '模糊处理类', casesCount: 2, status: 'active' },
+          { code: 'anp', version: 'v1.0', name: 'ANP网络分析', desc: '处理准则间依赖与反馈的网络分析法。', icon: 'fa-solid fa-network-wired', cat: '权重确定类', casesCount: 1, status: 'active' },
+          { code: 'entropy', version: 'v1.0', name: '熵权法', desc: '基于信息熵的客观赋权方法。', icon: 'fa-solid fa-percentage', cat: '权重确定类', casesCount: 2, status: 'active' },
+          { code: 'copras', version: 'v1.0', name: 'COPRAS', desc: '区分效益与成本准则的比例评估。', icon: 'fa-solid fa-chart-pie', cat: '排序选择类', casesCount: 1, status: 'active' },
+          { code: 'waspas', version: 'v1.0', name: 'WASPAS', desc: '综合加权和与加权乘积的排序方法。', icon: 'fa-solid fa-calculator', cat: '排序选择类', casesCount: 1, status: 'active' },
+          { code: 'grey', version: 'v1.0', name: '灰色关联分析', desc: '基于曲线几何相似性评价关联程度。', icon: 'fa-solid fa-wave-square', cat: '模糊处理类', casesCount: 1, status: 'active' }
         ],
         methodDetails: {
           ahp: {
@@ -2200,21 +2228,24 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         return this.provinceData.reduce(function(sum, p) { return sum + p.value; }, 0);
       },
       filteredPortfolio: function() {
-        if (this.portfolioFilter === '全部') return this.portfolio;
-        return this.portfolio.filter(function(w) { return w.type === this.portfolioFilter; }.bind(this));
+        var list = this.portfolio.filter(function(w) { return w.publishStatus !== 'closed'; });
+        if (this.portfolioFilter === '全部') return list;
+        return list.filter(function(w) { return w.type === this.portfolioFilter; });
       },
       filteredNotes: function() {
         var s = this.noteSearch.toLowerCase();
         var f = this.noteFilter;
         return this.notes.filter(function(n) {
+          if (n.publishStatus === 'closed') return false;
           var matchText = !s || n.title.toLowerCase().indexOf(s) > -1 || n.summary.toLowerCase().indexOf(s) > -1 || n.source.toLowerCase().indexOf(s) > -1;
           var matchCat = f === 'all' || n.category === f;
           return matchText && matchCat;
         });
       },
       filteredMethods: function() {
-        if (this.methodFilter === '全部') return this.methods;
-        return this.methods.filter(function(m) { return m.cat === this.methodFilter; }.bind(this));
+        var list = this.methods.filter(function(m) { return m.status !== 'closed'; });
+        if (this.methodFilter === '全部') return list;
+        return list.filter(function(m) { return m.cat === this.methodFilter; });
       },
       methodOaArticles: function() {
         var code = this.activeMethod.code;
@@ -2401,6 +2432,7 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         if (w.action === 'showTeachFramework') { this.showTeachFramework = true; this.trackAction('portfolio', w.name); return; }
         if (w.action === 'showLearnMethod') { this.showLearnMethod = true; this.trackAction('portfolio', w.name); return; }
         if (w.action === 'showSupplierCase') { this.showSupplierCase = true; this.trackAction('portfolio', w.name); return; }
+        if (w.action === 'showBehaviorDashboard') { this.currentTab = 4; this.adminPanelTab = 'behavior'; this.trackAction('portfolio', w.name); return; }
         this.activeWork = w;
         this.showWorkModal = true;
         this.trackAction('portfolio', w.name);
@@ -2613,7 +2645,8 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
         if (!this.noteForm.title.trim()) { alert('请输入标题'); return; }
         var findingsArr = this.noteForm.findings ? this.noteForm.findings.split('\n').filter(function(s){ return s.trim(); }) : [];
         var newId = this.notes.length ? Math.max.apply(null, this.notes.map(function(n){ return n.id; })) + 1 : 1;
-        var noteData = { id: this.editingNoteId === 'new' ? newId : this.editingNoteId, title:this.noteForm.title, category:this.noteForm.category, source:this.noteForm.source, sourceIcon:this.noteForm.origin==='self'?'fa-book':'fa-file-lines', origin:this.noteForm.origin, aiTags:[], status:this.noteForm.status, date:this.noteForm.date, duration:this.noteForm.duration, summary:this.noteForm.summary, question:this.noteForm.question, findings:findingsArr, thoughts:this.noteForm.thoughts };
+        var existingNote = this.notes.find(function(n){ return n.id === (this.editingNoteId === 'new' ? null : this.editingNoteId); }.bind(this));
+        var noteData = { id: this.editingNoteId === 'new' ? newId : this.editingNoteId, title:this.noteForm.title, category:this.noteForm.category, source:this.noteForm.source, sourceIcon:this.noteForm.origin==='self'?'fa-book':'fa-file-lines', origin:this.noteForm.origin, aiTags:[], status:this.noteForm.status, date:this.noteForm.date, duration:this.noteForm.duration, summary:this.noteForm.summary, question:this.noteForm.question, findings:findingsArr, thoughts:this.noteForm.thoughts, publishStatus: this.editingNoteId === 'new' ? 'active' : (existingNote ? existingNote.publishStatus : 'active') };
         if (this.editingNoteId === 'new') {
           this.notes.push(noteData);
         } else {
@@ -2625,6 +2658,18 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
       deleteNote: function(id) {
         if (!confirm('确定删除这条笔记吗？')) return;
         this.notes = this.notes.filter(function(n){ return n.id !== id; });
+      },
+      closeNote: function(id) {
+        var idx = this.notes.findIndex(function(n){ return n.id === id; });
+        if (idx >= 0) this.$set(this.notes[idx], 'publishStatus', 'closed');
+      },
+      activateNote: function(id) {
+        var idx = this.notes.findIndex(function(n){ return n.id === id; });
+        if (idx >= 0) this.$set(this.notes[idx], 'publishStatus', 'active');
+      },
+      setNoteInProgress: function(id) {
+        var idx = this.notes.findIndex(function(n){ return n.id === id; });
+        if (idx >= 0) this.$set(this.notes[idx], 'publishStatus', 'in-progress');
       },
       /* ===== CMS 方法管理 ===== */
       startAddMethod: function() {
@@ -2638,7 +2683,7 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
       saveMethod: function() {
         if (!this.methodForm.code.trim() || !this.methodForm.name.trim()) { alert('请填写代码和名称'); return; }
         if (this.editingMethodCode === 'new') {
-          this.methods.push({ code:this.methodForm.code, version:'v1.0', name:this.methodForm.name, desc:this.methodForm.desc, icon:this.methodForm.icon, cat:this.methodForm.cat, casesCount:this.methodForm.casesCount });
+          this.methods.push({ code:this.methodForm.code, version:'v1.0', name:this.methodForm.name, desc:this.methodForm.desc, icon:this.methodForm.icon, cat:this.methodForm.cat, casesCount:this.methodForm.casesCount, status:'active' });
         } else {
           var idx = this.methods.findIndex(function(m){ return m.code === this.methodForm.code; }.bind(this));
           if (idx >= 0) {
@@ -2650,6 +2695,18 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
       deleteMethod: function(code) {
         if (!confirm('确定删除这个方法吗？')) return;
         this.methods = this.methods.filter(function(m){ return m.code !== code; });
+      },
+      closeMethod: function(code) {
+        var idx = this.methods.findIndex(function(m){ return m.code === code; });
+        if (idx >= 0) this.$set(this.methods[idx], 'status', 'closed');
+      },
+      activateMethod: function(code) {
+        var idx = this.methods.findIndex(function(m){ return m.code === code; });
+        if (idx >= 0) this.$set(this.methods[idx], 'status', 'active');
+      },
+      setMethodInProgress: function(code) {
+        var idx = this.methods.findIndex(function(m){ return m.code === code; });
+        if (idx >= 0) this.$set(this.methods[idx], 'status', 'in-progress');
       },
       /* ===== CMS 作品管理 ===== */
       startAddWork: function() {
@@ -2663,7 +2720,7 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
       },
       saveWork: function() {
         if (!this.workForm.name.trim()) { alert('请输入作品名称'); return; }
-        var workData = { name:this.workForm.name, version:'v1.0', desc:this.workForm.desc, icon:this.workForm.icon, color:this.workForm.color, status:this.workForm.status, date:this.workForm.date, type:this.workForm.type, url:this.workForm.url, highlight:this.workForm.highlight };
+        var workData = { name:this.workForm.name, version:'v1.0', desc:this.workForm.desc, icon:this.workForm.icon, color:this.workForm.color, status:this.workForm.status, date:this.workForm.date, type:this.workForm.type, url:this.workForm.url, highlight:this.workForm.highlight, publishStatus:'active' };
         if (this.editingWorkIdx === 'new') {
           this.portfolio.push(workData);
         } else {
@@ -2674,6 +2731,15 @@ var Vue=function(e){"use strict";function t(e,t){const n=new Set(e.split(","));r
       deleteWork: function(idx) {
         if (!confirm('确定删除这个作品吗？')) return;
         this.portfolio.splice(idx, 1);
+      },
+      closeWork: function(idx) {
+        this.$set(this.portfolio[idx], 'publishStatus', 'closed');
+      },
+      activateWork: function(idx) {
+        this.$set(this.portfolio[idx], 'publishStatus', 'active');
+      },
+      setWorkInProgress: function(idx) {
+        this.$set(this.portfolio[idx], 'publishStatus', 'in-progress');
       },
       saveAboutData: function() {
         try {
